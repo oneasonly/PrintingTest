@@ -185,7 +185,7 @@ namespace ShellTest
         {
             try
             {
-                int i = 0;
+                int i = 1;
                 //PrintLog("Print server waiting...");
                 var server = new LocalPrintServer();
                 PrintQueue queue = server.DefaultPrintQueue;
@@ -195,7 +195,7 @@ namespace ShellTest
                 int count = strStat.Split('|').Length;
                 if (myStat.HasFlag(PrintQueueStatus.PaperOut))
                 {
-                    return;
+                    //return;
                 }
                 //if(myStat.HasFlag(PrintQueueStatus.wa)
                 PrintDocument printDocument = new PrintDocument();

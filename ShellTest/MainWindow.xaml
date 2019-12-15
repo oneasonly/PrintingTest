@@ -6,8 +6,8 @@
         xmlns:local="clr-namespace:ShellTest"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>        
-        <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="265" Margin="50,105,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="280"/>
+    <Grid>
+        <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="93" Margin="10,316,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="368"/>
         <TextBox x:Name="textBox1" HorizontalAlignment="Left" Height="408" Margin="389,2,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="403" RenderTransformOrigin="0.5,0.5">
             <TextBox.RenderTransform>
                 <TransformGroup>
@@ -19,6 +19,18 @@
             </TextBox.RenderTransform>
         </TextBox>
         <WrapPanel Width="390" HorizontalAlignment="Left">
+            <WrapPanel.Style>
+                <Style TargetType="{x:Type WrapPanel}">
+                    <Style.Resources>
+                        <Style TargetType="{x:Type Button}">
+                            <Setter Property="FontSize" Value="16" />
+                            <Setter Property="Margin" Value="3" />
+                            <Setter Property="Padding" Value="10 2 10 2"/>
+                        </Style>
+                    </Style.Resources>
+                    <Setter Property="Margin" Value="5"/>
+                </Style>
+            </WrapPanel.Style>
             <Button x:Name="button" Content="print"   Click="button_Click_Print"/>
             <Button x:Name="button1" Content="clear"    Click="button1_Click_Clear"/>
             <Button Content="Launch Explorer"  Click="Button_Click_Explorer"/>

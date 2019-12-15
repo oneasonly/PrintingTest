@@ -78,17 +78,6 @@ namespace ShellTest
                 textBox1.Text += $"exit time={proc?.ExitTime}\n";
                 textBox1.Text += $"code={proc?.ExitCode}\n";
             };
-
-            //if (proc == null || proc.HasExited)
-            //{
-            //    proc.Start();
-            //}
-
-            //for (int i = 0; i < 10; i++)
-            //{
-            //    textBox1.Text += $"exited={proc?.HasExited}\n";
-            //    await Task.Delay(1000);
-            //}
         }
 
         #region buttons
