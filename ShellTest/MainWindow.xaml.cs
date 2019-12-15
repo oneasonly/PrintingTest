@@ -41,7 +41,7 @@ namespace ShellTest
                 RunProc();
                 await GetProcStat();
                 PrintQueueStatus stat;
-                for (int i = 0; i < 10; i++)
+                for (int i = 0; i < 6; i++)
                 {
                     stat = Printing.GetPrintStat(); await Task.Delay(500);
                     if (stat != PrintQueueStatus.None) break;
@@ -60,6 +60,7 @@ namespace ShellTest
                 Process.Start(@"C:\Program Files\Custom Engineering\CePrnStatusMonitor\CePrnStatusMonitor.exe");
             if(!isFull)
                 Process.Start(@"CePrnStatusMonitor");
+            textBox1.Text += $"Launched CePrnStatusMonitor;\n";
         }
 
         async Task GetProcStat()
@@ -173,9 +174,14 @@ namespace ShellTest
             RunProc();
         }
 
-        private void Button_Click_DelWMIPrinter(object sender, RoutedEventArgs e)
+        private void Button_Click_DelWMIPrinters(object sender, RoutedEventArgs e)
         {
-            Printing.DeletePrinter(textBox.Text);
+            Printing.DeleteAllPrinters(textBox.Text);
+        }
+
+        private void Button_Click_RebootPC(object sender, RoutedEventArgs e)
+        {
+            Printing.RebootPC();
         }
     }
 }

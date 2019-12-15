@@ -43,7 +43,8 @@
             <Button Content="PrinterStatus" Click="Button_Click_PrinterStatus"/>
             <Button Content="All Print Stats" Click="Button_Click_AllPrintStat"/>
             <Button Content="Restart Monitor" Click="Button_Click_RestartMonitor"/>
-            <Button Content="Delete Printer WMI" Click="Button_Click_DelWMIPrinter"/>
+            <Button Content="Delete Printers WMI" Click="Button_Click_DelWMIPrinters"/>
+            <Button Content="Reboot" Click="Button_Click_RebootPC"/>
         </WrapPanel>
 
 

@@ -52,33 +52,27 @@ namespace ShellTest
             
         }
 
+        public static  void RebootPC()
+        {
+            Process.Start("shutdown", "/r /t 0");
+        }
         public static void OpenPrinter(string name)
         {
             IntPtr handler;
             bool isDone = PrintersDll.OpenPrinter(name, out handler, new IntPtr());
         }
 
-        public static PrintQueueStatus GetPrintStat()
-        {
-            var server = new LocalPrintServer();
-            
-            PrintQueue queue = server.DefaultPrintQueue;
-            
-            var myStat = queue.QueueStatus;
-            PrintLog($"Default Printer=={queue.FullName}; State={myStat}");
-            return myStat;
-        }
-        public static bool DeletePrinter(string sPrinterName)
+        public static void DeleteAllPrinters(string sPrinterName)
         {
             var all = GetAllPrinters();
             foreach (var item in all)
             {
-                bool isDel = WMIDeletePrinter(item.FullName);
+                string del = WMIDeletePrinter(item.FullName);
+                PrintLog($"Try Del={item.FullName} => Deleted={del}");
             }
-            return WMIDeletePrinter(sPrinterName);
         }
 
-        private static bool WMIDeletePrinter(string sPrinterName)
+        private static string WMIDeletePrinter(string sPrinterName)
         {
             oManagementScope = new ManagementScope(ManagementPath.DefaultPath);
             oManagementScope.Connect();
@@ -95,10 +89,10 @@ namespace ShellTest
                 {
                     var hz = oItem.Path;
                     oItem.Delete();
-                    return true;
+                    return oItem.ToString();
                 }
             }
-            return false;
+            return null;
         }
 
         static bool? CheckDisabledWMI(string PrinterNameArg)
@@ -118,7 +112,7 @@ namespace ShellTest
                     printerName = printer["Name"].ToString().ToLower();
                     if (printerName.ToLower().Equals(PrinterNameArg?.ToLower()))
                     {
-                        PrintLog("Printer = " + printer["Name"]);
+                        //PrintLog("WMI Disabled: Printer = " + printer["Name"]);
                         if (printer["WorkOffline"].ToString().ToLower().Equals("true"))
                         {
                             return true;
@@ -152,7 +146,7 @@ namespace ShellTest
             var printQueues = server.GetPrintQueues(new[] { EnumeratedPrintQueueTypes.Local, EnumeratedPrintQueueTypes.Connections });
             List<PrintQueue> allVKP80 = printQueues?.Where(x => x.FullName.ToLower().Contains("vkp80"))?.ToList();
 
-            PrintLog($"VKP80 count={allVKP80?.Count}; server={server.Name}");
+            PrintLog($"All VKP80 count={allVKP80?.Count}; server={server.Name}");
             foreach (PrintQueue printQueue in allVKP80)
             {                
                 var Name = printQueue.Name;
@@ -162,9 +156,19 @@ namespace ShellTest
                 var prior = printQueue.Priority;
                 bool? isDisabled = CheckDisabledWMI(FullName);
                 var path = $@"{server.Name}\{FullName}";
-                PrintLog($"Printer={FullName}; State={stat}; Disabled={isDisabled}");
+                PrintLog($"Printer={FullName}; State={stat}; Enabled={!isDisabled}");
                 IntPtr handler;
             }            
+        }
+
+        public static PrintQueueStatus GetPrintStat()
+        {
+            var server = new LocalPrintServer();
+            PrintQueue queue = server.DefaultPrintQueue;
+            var myStat = queue.QueueStatus;
+            bool? isDisabled = CheckDisabledWMI(queue.FullName);
+            PrintLog($"Default Printer=={queue.FullName}; State={myStat}; Enabled={!isDisabled}");
+            return myStat;
         }
 
         public static async Task RunPrintingsAnotherThread(string CheckRunOpResp)
