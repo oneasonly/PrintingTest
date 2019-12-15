@@ -17,19 +17,48 @@ using FontFamily = System.Drawing.FontFamily;
 
 namespace ShellTest
 {
+    public struct PRINTER_DEFAULTS
+    {
+        public IntPtr pDatatype;
+        public IntPtr pDevMode;
+        public int DesiredAccess;
+    }
     public static class PrintersDll
     {
+        public const int STANDARD_RIGHTS_REQUIRED = 0xF0000;
+        public const int PRINTER_ACCESS_ADMINISTER = 0x4;
+        public const int PRINTER_ACCESS_USE = 0x8;
+        public const int PRINTER_ALL_ACCESS = (STANDARD_RIGHTS_REQUIRED | PRINTER_ACCESS_ADMINISTER | PRINTER_ACCESS_USE);
         [DllImport("winspool.drv", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern bool SetDefaultPrinter(string Name);
 
-        [DllImport("winspool.drv", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern bool DeletePrinter(string Name);
+        [DllImport("winspool.drv", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall, SetLastError = true)]
+        public static extern bool DeletePrinter(IntPtr hPrinter);
 
-        [DllImport("winspool.drv", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern bool DeletePrinterConnection(string Name);
+        [DllImport("winspool.drv", SetLastError = true)]
+        static extern int ClosePrinter(IntPtr hPrinter);
 
-        [DllImport("winspool.drv", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern bool OpenPrinter([MarshalAs(UnmanagedType.LPStr)] string szPrinter, out IntPtr hPrinter, IntPtr pd);
+        [DllImport("winspool.drv", CharSet = CharSet.Unicode, ExactSpelling = false, CallingConvention = CallingConvention.StdCall, SetLastError = true)]
+        public static extern int OpenPrinter(string pPrinterName, out IntPtr phPrinter, IntPtr pDefault);
+
+        public static bool DeletePrinter(string printerName)
+        {
+            var pd = new PRINTER_DEFAULTS { DesiredAccess = PRINTER_ALL_ACCESS, pDatatype = IntPtr.Zero, pDevMode = IntPtr.Zero };
+            var rawsize = Marshal.SizeOf(pd);
+            var pdPtr = Marshal.AllocHGlobal(rawsize);
+            Marshal.StructureToPtr(pd, pdPtr, true);
+            IntPtr hPrinter;
+            if (OpenPrinter(printerName, out hPrinter, pdPtr) != 0)
+            {
+                if (hPrinter != IntPtr.Zero)
+                {
+                    var result = DeletePrinter(hPrinter);
+                    ClosePrinter(hPrinter);
+                    return result;
+                }
+            }
+            return false;
+        }
 
     }
     public static class Printing
@@ -59,16 +88,57 @@ namespace ShellTest
         public static void OpenPrinter(string name)
         {
             IntPtr handler;
-            bool isDone = PrintersDll.OpenPrinter(name, out handler, new IntPtr());
+            //bool isDone = PrintersDll.OpenPrinter(name, out handler, new IntPtr());
+        }
+        public static void DeleteAllPrintersDLL()
+        {
+            var all = GetAllPrinters();
+            foreach (PrintQueue item in all)
+            {
+                try
+                {
+                    PrintersDll.DeletePrinter(item?.FullName);
+                    PrintLog($"Deleted={item?.FullName};");
+                }
+                catch (Exception ex)
+                {
+                    PrintLog($"Try Del={item?.FullName} ===> {ex.Message};");
+                }
+            }
         }
 
         public static void DeleteAllPrinters(string sPrinterName)
         {
             var all = GetAllPrinters();
-            foreach (var item in all)
+            foreach (PrintQueue item in all)
             {
-                string del = WMIDeletePrinter(item.FullName);
-                PrintLog($"Try Del={item.FullName} => Deleted={del}");
+                string del = WMIDeletePrinter(item?.FullName);
+                PrintLog($"Try Del={item?.FullName} => Deleted={del}");
+            }
+        }
+
+        public static void WMIDeletePrinterConnections()
+        {
+            ConnectionOptions options = new ConnectionOptions();
+            options.EnablePrivileges = true;
+            ManagementScope scope = new ManagementScope(ManagementPath.DefaultPath, options);
+            scope.Connect();
+            ManagementClass win32Printer = new ManagementClass("Win32_Printer");
+            ManagementObjectCollection printers = win32Printer.GetInstances();
+            foreach (ManagementObject printer in printers)
+            {
+                try
+                {
+                    if (printer.ToString().ToLower().Contains("vkp80"))
+                    {
+                        PrintLog($"Delete: {printer}");
+                        printer.Delete();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    PrintLog(ex.Message);
+                }                
             }
         }
 
@@ -87,9 +157,17 @@ namespace ShellTest
             {
                 foreach (ManagementObject oItem in oObjectCollection)
                 {
-                    var hz = oItem.Path;
-                    oItem.Delete();
-                    return oItem.ToString();
+                    try
+                    {
+                        var hz = oItem.Path;
+                        oItem.Delete();
+                        return oItem.ToString();
+                    }
+                    catch (Exception ex)
+                    {
+                        return ex.Message;
+                    }
+
                 }
             }
             return null;
@@ -137,16 +215,13 @@ namespace ShellTest
             var server = new PrintServer();
             var printQueues = server.GetPrintQueues(new[] { EnumeratedPrintQueueTypes.Local, EnumeratedPrintQueueTypes.Connections });
             List<PrintQueue> allVKP80 = printQueues?.Where(x => x.FullName.ToLower().Contains("vkp80"))?.ToList();
+            PrintLog($"All VKP80 count={allVKP80?.Count}; server={server?.Name}");
             return allVKP80;
         }
 
         public static void AllPrintersStat()
-        {
-            var server = new PrintServer();            
-            var printQueues = server.GetPrintQueues(new[] { EnumeratedPrintQueueTypes.Local, EnumeratedPrintQueueTypes.Connections });
-            List<PrintQueue> allVKP80 = printQueues?.Where(x => x.FullName.ToLower().Contains("vkp80"))?.ToList();
-
-            PrintLog($"All VKP80 count={allVKP80?.Count}; server={server.Name}");
+        {        
+            List<PrintQueue> allVKP80 = GetAllPrinters();            
             foreach (PrintQueue printQueue in allVKP80)
             {                
                 var Name = printQueue.Name;
@@ -155,8 +230,13 @@ namespace ShellTest
                 var defaultPriority = printQueue.DefaultPriority;
                 var prior = printQueue.Priority;
                 bool? isDisabled = CheckDisabledWMI(FullName);
-                var path = $@"{server.Name}\{FullName}";
                 PrintLog($"Printer={FullName}; State={stat}; Enabled={!isDisabled}");
+                PrintQueue one = allVKP80?.FirstOrDefault(x => x.QueueStatus != PrintQueueStatus.None);
+                if(one!=null)
+                {
+                    PrintLog($"\nSET DEFAULT PRINTER = {one?.FullName}");
+                    PrintersDll.SetDefaultPrinter(one?.FullName);
+                }
                 IntPtr handler;
             }            
         }

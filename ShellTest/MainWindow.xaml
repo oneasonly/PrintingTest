@@ -8,7 +8,7 @@
         Title="MainWindow" Height="450" Width="800">
     <Grid>
         <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="93" Margin="10,316,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="368"/>
-        <TextBox x:Name="textBox1" HorizontalAlignment="Left" Height="408" Margin="389,2,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="403" RenderTransformOrigin="0.5,0.5">
+        <TextBox x:Name="textBox1" Margin="389,2,0,9" TextWrapping="Wrap" Text="TextBox" RenderTransformOrigin="0.5,0.5">
             <TextBox.RenderTransform>
                 <TransformGroup>
                     <ScaleTransform/>
@@ -18,7 +18,7 @@
                 </TransformGroup>
             </TextBox.RenderTransform>
         </TextBox>
-        <WrapPanel Width="390" HorizontalAlignment="Left">
+        <WrapPanel Width="390" HorizontalAlignment="Left" Margin="0 80 0 0">
             <WrapPanel.Style>
                 <Style TargetType="{x:Type WrapPanel}">
                     <Style.Resources>
@@ -37,12 +37,12 @@
             <Button Content="Reg Explorer User"   Click="Button_Click_RegExplorerShellUser"/>
             <Button Content="Reg Custom Shell User"  Click="Button_Click_RegCustomShellUser"/>
             <Button Content="Set Redirector" Click="Button_Click_SetRedirectorRegShell"/>
-            <Button Content="RunMonitorFull" Click="Button_Click_FullMonitorRun"/>
-            <Button Content="RunMonitorShort" Click="Button_Click_ShortMonitorRun"/>
+            <Button Content="DLL Delete Printers" Click="Button_Click_DeleteWMIConnections"/>
+            <Button Content="Run Monitor" Click="Button_Click_ShortMonitorRun"/>
             <Button Content="Check Proc Monitor" Click="Button_Click_CheckProcMonitor"/>
             <Button Content="PrinterStatus" Click="Button_Click_PrinterStatus"/>
             <Button Content="All Print Stats" Click="Button_Click_AllPrintStat"/>
-            <Button Content="Restart Monitor" Click="Button_Click_RestartMonitor"/>
+            <Button Content="Kill Monitor" Click="Button_Click_KillMonitor"/>
             <Button Content="Delete Printers WMI" Click="Button_Click_DelWMIPrinters"/>
             <Button Content="Reboot" Click="Button_Click_RebootPC"/>
         </WrapPanel>

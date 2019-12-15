@@ -87,9 +87,10 @@ namespace ShellTest
             GetProcStat();
         }
 
-        private void Button_Click_FullMonitorRun(object sender, RoutedEventArgs e)
+        private void Button_Click_DeleteWMIConnections(object sender, RoutedEventArgs e)
         {
-            RunProc(true);
+            //Printing.WMIDeletePrinterConnections();
+            Printing.DeleteAllPrintersDLL();
         }
 
         private void Button_Click_ShortMonitorRun(object sender, RoutedEventArgs e)
@@ -166,12 +167,11 @@ namespace ShellTest
             Printing.AllPrintersStat();
         }
 
-        private void Button_Click_RestartMonitor(object sender, RoutedEventArgs e)
+        private void Button_Click_KillMonitor(object sender, RoutedEventArgs e)
         {
             Process proc = Process.GetProcessesByName("CePrnStatusMonitor").FirstOrDefault();
-            proc.Kill();
-            proc.WaitForExit();
-            RunProc();
+            proc?.Kill();
+            proc?.WaitForExit();
         }
 
         private void Button_Click_DelWMIPrinters(object sender, RoutedEventArgs e)
